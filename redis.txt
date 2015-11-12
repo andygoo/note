@@ -1,0 +1,60 @@
+
+redis安装
+
+yum install -y tcl
+
+$ wget http://download.redis.io/releases/redis-3.0.5.tar.gz
+$ tar xzf redis-3.0.5.tar.gz
+$ cd redis-3.0.5
+$ make
+
+echo 1 > /proc/sys/vm/overcommit_memory
+overcommit_memory文件指定了内核针对内存分配的策略，其值可以是0、1、2。
+0， 表示内核将检查是否有足够的可用内存供应用进程使用；如果有足够的可用内存，内存申请允许；否则，内存申请失败，并把错误返回给应用进程。 
+1， 表示内核允许分配所有的物理内存，而不管当前的内存状态如何。
+2， 表示内核允许分配超过所有物理内存和交换空间总和的内存
+
+cp redis.conf /etc/
+cp src/redis-benchmark src/redis-cli src/redis-server /usr/bin/ 
+
+vi /etc/redis.conf
+daemonize yes
+maxmemory 256mb #分配256M内存
+
+启动redis服务
+redis-server /etc/redis.conf
+
+关闭redis服务
+redis-cli shutdown  
+
+============================================================================
+
+1. Snapshotting:
+缺省情况下，Redis会将数据集的快照dump到dump.rdb文件中。此外，我们也可以通过配置文件来修改Redis服务器dump快照的频率，在打开6379.conf文件之后，我们搜索save，可以看到下面的配置信息：
+#在900秒(15分钟)之后，如果至少有1个key发生变化，则dump内存快照。
+save 900 1
+#在300秒(5分钟)之后，如果至少有10个key发生变化，则dump内存快照。
+save 300 10?
+?#在60秒(1分钟)之后，如果至少有10000个key发生变化，则dump内存快照。
+save 60 10000
+?? ?
+2. Dump快照的机制：
+1). Redis先fork子进程。
+2). 子进程将快照数据写入到临时RDB文件中。
+3). 当子进程完成数据写入操作后，再用临时文件替换老的文件。
+
+3. AOF文件：
+上面已经多次讲过，RDB的快照定时dump机制无法保证很好的数据持久性。如果我们的应用确实非常关注此点，我们可以考虑使用Redis中的AOF机制。对于Redis服务器而言，其缺省的机制是RDB，如果需要使用AOF，则需要修改配置文件中的以下条目：
+将appendonly no改为appendonly yes
+从现在起，Redis在每一次接收到数据修改的命令之后，都会将其追加到AOF文件中。在Redis下一次重新启动时，需要加载AOF文件中的信息来构建最新的数据到内存中。
+
+4. AOF的配置：
+在Redis的配置文件中存在三种同步方式，它们分别是：
+appendfsync always #每次有数据修改发生时都会写入AOF文件。
+appendfsync everysec? #每秒钟同步一次，该策略为AOF的缺省策略。
+appendfsync no????????? #从不同步。高效但是数据不会被持久化。
+
+5. 如何修复坏损的AOF文件：
+1). 将现有已经坏损的AOF文件额外拷贝出来一份。
+2). 执行"redis-check-aof --fix <filename>"命令来修复坏损的AOF文件。
+3). 用修复后的AOF文件重新启动Redis服务器。

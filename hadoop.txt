@@ -1,0 +1,106 @@
+﻿
+hadooop 1.2.1安装
+
+groupadd hadoop
+useradd hadoop -g hadoop
+
+2. ssh无密码登录
+Hadoop用户操作：
+	ssh-keygen -t rsa
+	cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+	ssh node1 cat /home/hadoop/.ssh/id_rsa.pub >> /home/hadoop/.ssh/authorized_keys
+	scp /home/hadoop/.ssh/authorized_keys node1:/home/hadoop/.ssh/authorized_keys
+Root用户操作：
+	chmod go-w /home/hadoop/.ssh
+	chmod 600 /home/hadoop/.ssh/authorized_keys
+测试：
+Hadoop用户
+ssh localhost
+ssh node1
+
+==================================================================
+
+vi /etc/profile
+export HADOOP_HOME=/home/hadoop/hadoop-1.2.1  
+export PATH=$PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+
+export JAVA_HOME=/usr/lib/jvm/java
+export JRE_HOME=$JAVA_HOME/jre
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools/jar
+export PATH=$PATH:$JAVA_HOME/bin
+
+wget http://archive.apache.org/dist/hadoop/core/hadoop-1.2.1/hadoop-1.2.1.tar.gz
+
+mkdir /home/hadoop/hdfs
+mkdir /home/hadoop/hdfs/data
+mkdir /home/hadoop/hdfs/name
+mkdir /home/hadoop/mapred
+mkdir /home/hadoop/mapred/local
+mkdir /home/hadoop/mapred/system
+mkdir /home/hadoop/tmp
+chown hadoop:hadoop /hadoop -R
+
+vi hadoop-env.sh
+export JAVA_HOME=/usr/java/jdk1.6.0_45  
+export HADOOP_HOME_WARN_SUPPRESS="TRUE" 
+source hadoop-env.sh
+
+vi core-site.xml
+<configuration>
+    <property>
+        <name>fs.default.name</name>
+        <value>hdfs://Master.Hadoop:9000</value>
+    </property>
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/home/hadoop/tmp</value>
+    </property>
+</configuration>
+
+vi hdfs-site.xml
+<configuration>
+  <property>
+        <name>dfs.replication</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>dfs.name.dir</name>
+        <value>/home/hadoop/hdfs/name</value>
+    </property>
+    <property>
+        <name>dfs.data.dir</name>
+        <value>/home/hadoop/hdfs/data</value>
+    </property>
+</configuration>
+
+vi mapred-site.xml
+<configuration>
+  <property>
+        <name>mapred.job.tracker</name>
+        <value>localhost:9001</value>
+    </property>
+</configuration>
+
+hadoop namenode -format
+start-all.sh
+jps
+6360 NameNode  
+6481 DataNode  
+6956 Jps  
+6818 TaskTracker  
+6610 SecondaryNameNode  
+6698 JobTracker  
+
+localhost:50030/   for the Jobtracker
+localhost:50070/   for the Namenode
+localhost:50060/   for the Tasktracker
+
+
+查看集群的状态：
+hadoop dfsadmin -report
+
+====================================================================
+#如果center或slave的IP换了，需要做如下操作：
+#1、 清空Hadoop临时目录 /home/hadoop/tmp
+#2、 重新执行hadoop namenode –format 格式化HDFS。
+===========================================================================

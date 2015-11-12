@@ -1,0 +1,15 @@
+Windows系统自带无线功能开启以及关闭
+
+一、开启系统承载网络模块和新建无线网络命令：
+netsh wlan set hostednetwork mode=allow ssid=xxii key=xxxxxxxx
+
+二、开启无线网命令：
+netsh wlan start hostednetwork
+
+三、关闭无线网命令：
+netsh wlan stop hostednetwork
+
+四、关闭承载网络模块命令：
+netsh wlan set hostednetwork mode=disallow
+
+====================================================================

@@ -1,0 +1,37 @@
+
+
+wget http://nodejs.org/dist/v0.12.4/node-v0.12.4.tar.gz
+
+mkdir ~/local
+./configure –prefix=$HOME/local/node
+make
+make install
+echo 'export PATH=$HOME/local/node/bin:$PATH' >> ~/.profile
+echo 'export NODE_PATH=$HOME/local/node:$HOME/local/node/lib/node_modules' >> ~/.profile
+source ~/.profile
+
+export PATH="/usr/local/node/bin:$PATH"
+export NODE_PATH="/usr/local/node:/usr/local/node/lib/node_modules"
+
+export NODE_HOME=/usr/local/node
+export PATH=$PATH:$NODE_HOME/bin
+export NODE_PATH=$NODE_HOME/lib/node_modules
+
+安装npm
+curl https://npmjs.org/install.sh | sh
+根据需要，安装相应的包，例如express：
+npm install express -gd
+-g代表安装到NODE_PATH的lib里面，而-d代表把相依性套件也一起安装。
+如果沒有-g的话会安装目前所在的目录(会建立一个node_modules的文件夹)
+
+npm install socket.io
+npm install nodejs-websocket
+
+npm install -g wsg
+wscat -c ws://echo.websocket.org
+
+wscat -c ws://192.168.1.244:8001 -p 8
+
+
+
+

@@ -1,0 +1,265 @@
+
+=========================================================================
+
+RHadoop安装
+载入需要的程辑包：Rcpp
+载入需要的程辑包：RJSONIO
+载入需要的程辑包：digest
+载入需要的程辑包：functional
+载入需要的程辑包：reshape2
+载入需要的程辑包：stringr
+载入需要的程辑包：plyr
+
+install.packages("rJava")
+install.packages("reshape2")
+install.packages("Rcpp")
+install.packages("iterators")
+install.packages("itertools")
+install.packages("digest")
+install.packages("RJSONIO")
+install.packages("functional")
+install.packages('bitops')
+install.packages('caTools')
+
+wget https://github.com/RevolutionAnalytics/rhdfs/blob/master/build/rhdfs_1.0.8.tar.gz
+wget http://goo.gl/dvBric #rmr2
+
+vi /etc/profile
+HADOOP_CMD=/home/hadoop/hadoop-1.2.1/bin/hadoop
+HADOOP_STREAMING=/home/hadoop/hadoop-1.2.1/contrib/streaming/hadoop-streaming-1.2.1.jar  (rmr2会用到)
+
+R CMD INSTALL /root/rhdfs_1.0.8.tar.gz
+R CMD INSTALL /root/rmr2_3.1.0.tar.gz
+
+====================================================================================使用方法  例子
+library(rhfds)
+hdfs.init()
+hdfs.ls('/')
+
+library(rmr2)
+#简单mapreduce
+small.ints=to.dfs(1:10)
+mapreduce(input=small.ints, map=function(k, v) cbind(v, v^2))
+from.dfs("/tmp/file1dd530de5183")
+=====================================================================================
+#词频统计
+wordcount=function(input, output=NULL, pattern=","){
+    wc.map=function(., lines) {
+        keyval(unlist(strsplit(x=lines, split=pattern)),1)
+    }
+    wc.reduce=function(word, counts) {
+        keyval(word, sum(counts))
+    }
+    mapreduce(input=input ,output=output, input.format="text", map=wc.map, reduce=wc.reduce, combine=T)
+}
+input='/wc.txt' #hadoop文件
+ret=wordcount(input)
+from.dfs(ret)
+
+==========================================================================================
+一，基于物品推荐的协同过滤算法
+基于用户的协同过滤算法，是给用户推荐和他兴趣相似的其他用户喜欢的物品。
+基于物品的协同过滤算法，是给用户推荐和他之前喜欢的物品相似的物品。
+基于物品的协同过滤算法，是目前广泛使用的一种推荐算法，像Netflix, YouTube, 
+
+算法主要分为两步：
+1. 计算物品之间的相似度
+2. 根据物品的相似度和用户的历史行为给用户生成推荐列表
+
+算法的思想：
+1. 建立物品的同现矩阵
+2. 建立用户对物品的评分矩阵
+3. 矩阵计算推荐结果
+
+#引用plyr包
+library(plyr)
+
+#读取数据集
+train<-read.csv(file="~/small.csv",header=FALSE)
+names(train)<-c("user","item","pref") 
+
+#计算用户列表
+usersUnique<-function(){
+  users<-unique(train$user)
+  users[order(users)]
+}
+
+#计算商品列表方法
+itemsUnique<-function(){
+  items<-unique(train$item)
+  items[order(items)]
+}
+
+# 用户列表
+users<-usersUnique() 
+
+# 商品列表
+items<-itemsUnique() 
+
+#建立商品列表索引
+index<-function(x) which(items %in% x)
+data<-ddply(train,.(user,item,pref),summarize,idx=index(item)) 
+
+#同现矩阵
+cooccurrence<-function(data){
+  n<-length(items)
+  co<-matrix(rep(0,n*n),nrow=n)
+  for(u in users){
+    idx<-index(data$item[which(data$user==u)])
+    m<-merge(idx,idx)
+    for(i in 1:nrow(m)){
+      co[m$x[i],m$y[i]]=co[m$x[i],m$y[i]]+1
+    }
+  }
+  return(co)
+}
+
+#推荐算法
+recommend<-function(udata=udata,co=coMatrix,num=0){
+  n<-length(items)
+
+  #all of pref
+  pref<-rep(0,n)
+  pref[udata$idx]<-udata$pref
+
+  # 用户评分矩阵
+  userx<-matrix(pref,nrow=n)
+
+  #同现矩阵*评分矩阵
+  r<-co %*% userx
+
+  #推荐结果排序
+  r[udata$idx]<-0
+  idx<-order(r,decreasing=TRUE)
+  topn<-data.frame(user=rep(udata$user[1],length(idx)),item=items[idx],val=r[idx])
+
+  # 推荐结果取前num个
+  if(num>0){
+    topn<-head(topn,num)
+  }
+
+  #返回结果
+  return(topn)
+}
+
+
+#生成同现矩阵
+co <- cooccurrence(data) 
+
+#计算推荐结果
+recom <- data.frame()
+for(i in 1:length(users)){
+  udata <- data[which(data$user==users[i]),]
+  recom <- rbind(recom,recommend(udata,co,0)) 
+} 
+recom <- recom[recom$val>0, ]
+
+====================================================================================
+算法的思想：
+1. 建立物品的同现矩阵
+1) 按用户分组，得到所有物品出现的组合列表。
+2) 对物品组合列表进行计数，建立物品的同现矩阵
+2. 建立用户对物品的评分矩阵
+3. 合并同现矩阵和评分矩阵
+4. 计算推荐结果列表
+5. 按输入格式得到推荐评分列表
+
+#加载rmr2包
+library(rmr2)
+
+#输入数据文件
+train<-read.csv(file="~/small.csv",header=FALSE)
+names(train)<-c("user","item","pref")
+
+#使用rmr的hadoop格式，hadoop是默认设置。
+rmr.options(backend = 'hadoop')
+
+#把数据集存入HDFS
+train.hdfs = to.dfs(keyval(train$user,train))
+from.dfs(train.hdfs)
+
+#STEP 1, 建立物品的同现矩阵
+# 1) 按用户分组，得到所有物品出现的组合列表。
+train.mr<-mapreduce(
+  train.hdfs, 
+  map = function(k, v) {
+    keyval(k,v$item)
+  }
+  ,reduce=function(k,v){
+    m<-merge(v,v)
+    keyval(m$x,m$y)
+  }
+)
+from.dfs(train.mr)
+
+# 2) 对物品组合列表进行计数，建立物品的同现矩阵
+step2.mr<-mapreduce(
+  train.mr,
+  map = function(k, v) {
+    d<-data.frame(k,v)
+    d2<-ddply(d,.(k,v),count)
+
+    key<-d2$k
+    val<-d2
+    keyval(key,val)
+  }
+)
+from.dfs(step2.mr)
+
+# 2. 建立用户对物品的评分矩阵
+train2.mr<-mapreduce(
+  train.hdfs, 
+  map = function(k, v) {
+    #df<-v[which(v$user==3),]
+    df<-v
+    key<-df$item
+    val<-data.frame(item=df$item,user=df$user,pref=df$pref)
+    keyval(key,val)
+  }
+)
+from.dfs(train2.mr)
+
+#3. 合并同现矩阵 和 评分矩阵
+eq.hdfs<-equijoin(
+  left.input=step2.mr, 
+  right.input=train2.mr,
+  map.left=function(k,v){
+    keyval(k,v)
+  },
+  map.right=function(k,v){
+    keyval(k,v)
+  },
+  outer = c("left")
+)
+from.dfs(eq.hdfs)
+
+#4. 计算推荐结果列表
+cal.mr<-mapreduce(
+  input=eq.hdfs,
+  map=function(k,v){
+    val<-v
+    na<-is.na(v$user.r)
+    if(length(which(na))>0) val<-v[-which(is.na(v$user.r)),]
+    keyval(val$k.l,val)
+  }
+  ,reduce=function(k,v){
+    val<-ddply(v,.(k.l,v.l,user.r),summarize,v=freq.l*pref.r)
+    keyval(val$k.l,val)
+  }
+)
+from.dfs(cal.mr)
+
+#5. 按输入格式得到推荐评分列表
+result.mr<-mapreduce(
+  input=cal.mr,
+  map=function(k,v){
+    keyval(v$user.r,v)
+  }
+  ,reduce=function(k,v){
+    val<-ddply(v,.(user.r,v.l),summarize,v=sum(v))
+    val2<-val[order(val$v,decreasing=TRUE),]
+    names(val2)<-c("user","item","pref")
+    keyval(val2$user,val2)
+  }
+)
+from.dfs(result.mr)

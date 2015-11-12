@@ -1,0 +1,12 @@
+
+~/hive-0.9.0/bin/hive --service hiveserver -p 9000
+nohup hive --service hiveserver &
+=============================================================
+vi  hive-log4j.properties  
+找到  参数项 log4j.appender.EventCounter
+将这一项的值修改为： org.apache.hadoop.log.metrics.EventCounter
+==============================================================
+2.在当前用户home/.bash_profile里增加一个环境变量：
+export HADOOP_HOME_WARN_SUPPRESS=1=============
+=================================================
+

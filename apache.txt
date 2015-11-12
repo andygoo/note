@@ -1,0 +1,27 @@
+
+修改
+ServerRoot "C:/Apache-22"
+ServerName localhost:80
+DocumentRoot "D:/"
+<Directory />
+    #Options FollowSymLinks
+    #AllowOverride None
+    #Order deny,allow
+    #Deny from all
+	Options Indexes FollowSymLinks  
+    AllowOverride None  
+</Directory>
+
+开启rewrite重写
+AllowOverride All  
+LoadModule rewrite_module modules/mod_rewrite.so
+
+开启虚拟主机
+Include conf/extra/httpd-vhosts.conf
+泛域名
+ServerAlias *.ttt.com
+
+添加
+LoadModule php5_module "C:/php-5.4.19-ts/php5apache2_2.dll"
+AddType application/x-httpd-php .php
+AddType application/x-httpd-php .htm

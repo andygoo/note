@@ -1,0 +1,11 @@
+#!/bin/bash
+
+CURTIME=`date +"%Y-%m-%d"`
+Sys_data=`date -d  "$CURTIME" +%s`
+Sys_d=`expr $Sys_data - 86400`
+filedate=`date -d @$Sys_d "+%Y-%m-%d"`
+
+scp  /data/Log/from/202.165.178.52_$filedate* 10.10.178.34:/data/dnslog/dakai
+scp  /data/Log/hao123/202.165.178.52_$filedate* 10.10.178.34:/data/dnslog/quwang
+scp  /data/Log/yiqifa/202.165.178.52_$filedate* 10.10.178.34:/data/dnslog/yiqifa
+====================================================================================

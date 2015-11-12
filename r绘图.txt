@@ -1,0 +1,296 @@
+
+set.seed(1234)
+x <- sample(1:100, 80, replace = FALSE)
+y <- 2 * x + 20 + rnorm(80, 0, 10)
+
+#基本散点图
+plot(x = x, y = y)  ## 或者使用: plot(x, y)
+
+# 添加标题和标签
+plot(x, y, xlab = "name of x", ylab = "name of y", main = "Scatter Plot")
+
+# 设置坐标界限
+## 可先用以下函数查看x和y的取值范围 range(x) range(y)
+plot(x, y, xlab = "name of x", ylab = "name of y", main = "Scatter Plot", xlim = c(1, 100), ylim = c(0, 250))
+
+# 更改字符
+plot(x, y, xlab = "name of x", ylab = "name of y", main = "Scatter Plot", xlim = c(1, 100), ylim = c(0, 250), pch = 19)
+
+# pch的取值与其对应的图形字符，也可以使用plot绘制：
+a <- rep(1:5, each = 5)
+b <- rep(1:5, 5)
+plot(a, b, pch = 1:25)
+text(a, b, 1:25, pos = 2)
+
+# 更改颜色
+plot(x, y, main = "Plot", sub = "Scatter Plot", col = "red", col.axis = "green", col.lab = "blue", col.main = "#999000", col.sub = "#000999", fg = "gray", bg = "white")
+参数		作用
+col			绘图字符的颜色
+col.axis	坐标轴文字颜色
+col.lab		坐标轴标签颜色
+col.main	标题颜色
+col.sub		副标题颜色
+fg			前景色
+bg			背景色
+
+#更改尺寸
+plot(x, y, main = "Plot", sub = "Scatter Plot", cex = 0.5, cex.axis = 1, cex.lab = 0.8, cex.main = 2, cex.sub = 1.5)
+
+===============================================================================
+
+二、线
+t <- 1:50
+set.seed(1234)
+v <- rnorm(50, 0, 10)
+plot(t, v, type = "l")
+
+更改线条类型
+a <- c()
+plot(a, xlim = c(0, 10), ylim = c(1, 6), xlab = "", ylab = "lty")
+for (i in 1:6) {
+    abline(h = i, lty = i)
+}
+
+线条宽度
+plot(t, v, type = "l", lwd = 2)
+
+点与线
+plot(t, v, type = "b")
+
+===============================================================================
+
+三、散点图与平滑线
+model <- lm(y ~ x)
+plot(x, y)
+abline(model, col = "blue")
+
+在散点图上画一条拟合的平滑线，一般使用loess
+plot(x, y)
+model_loess <- loess(y ~ x)
+fit <- fitted(model_loess)
+ord <- order(x)
+lines(x[ord], fit[ord], lwd = 2, lty = 2, col = "blue")
+
+要实现上面的图形简单地方法
+1. 使用car包中的scatterplot()函数
+library(car)
+scatterplot(y ~ x, spread = FALSE, lty = 1, lwd = 2, smoother.args = list(lty = 2, lwd = 2), smoother = loessLine)
+2. 使用ggplot2包
+qplot(x, y, geom = c("point", "smooth"), method = "lm", se = FALSE) + geom_smooth(method = "loess", color = "red", se = FALSE, lty = 2)
+或者
+dataSet <- data.frame(x = x, y = y)
+ggplot(aes(x, y), data = dataSet) + geom_point() + geom_smooth(method = "lm",
+    color = "green", lty = 1, se = FALSE) + geom_smooth(method = "loess", color = "red",
+    lty = 2, se = FALSE)
+===============================================================================
+一、 饼图
+
+## 构造一批数据
+year <- 2001:2010
+set.seed(1234)
+counts <- sample(100:500, 10)
+
+## 绘图 在同一张画布上绘制4幅图，对于`par`的使用，可以`?par`
+par(mfrow = c(2, 2))
+
+### 1
+pie(counts, labels = year)
+
+### 2
+pie(counts, labels = year, col = gray(seq(0.1, 1, length = 10)), clockwise = TRUE)
+
+### 3
+lb <- paste(year, counts, sep = ":")
+pie(counts, labels = lb, col = rainbow(10))
+
+### 4
+library(plotrix)
+pie3D(counts, labels = year, explode = 0.1)
+
+
+====================================================================================
+
+二、 条形图
+
+par(mfrow = c(2, 2))
+barplot(counts, names.arg = year)
+barplot(counts, names.arg = year, horiz = TRUE)
+barplot(counts, names.arg = year, col = rainbow(10))
+barplot(counts, names.arg = year, col = grey(seq(0.1, 1, length = 10)), horiz = TRUE)
+
+====================================================================================
+
+三、直方图
+
+## 构造数据
+set.seed(1234)
+x <- rnorm(100, 0, 1)
+## 设置画布
+par(mfrow = c(2, 2))
+## 1
+hist(x)
+box()
+## 2 修改颜色，组数
+hist(x, breaks = 10, col = "gray")
+box()
+## 3 添加核密度曲线
+hist(x, breaks = 10, freq = FALSE, col = "gray")
+lines(density(x), col = "red", lwd = 2)
+box()
+## 4 添加正态密度曲线
+h <- hist(x, breaks = 10, col = "gray")
+xfit <- seq(min(x), max(x), length = 100)
+yfit <- dnorm(xfit, mean = mean(x), sd = sd(x))
+yfit <- yfit * diff(h$mids[1:2]) * length(x)
+lines(xfit, yfit, col = "blue", lwd = 2)
+box()
+
+
+	
+==================================================================
+
+四、箱线图
+
+## 构造数据
+x1 <- x
+x2 <- rnorm(100, 1, 2)
+x3 <- rnorm(100, 2, 4)
+all_x <- c(x1, x2, x3)
+label <- rep(1:3, each = 100)
+dataSet3 <- data.frame(x = all_x, label = label)
+# 绘制箱线图
+boxplot(dataSet3$x)
+# 考虑类别
+boxplot(x ~ label, data = dataSet3)
+
+
+==========================================================================
+
+ggplot2
+
+library(ggplot2)
+
+	
+## 取出感兴趣的数据
+dataSet <- mtcars[c("mpg", "disp", "carb")]
+## 转换数据的格式
+dataSet <- transform(dataSet, carb = factor(carb))
+
+
+## 散点图
+qplot(mpg, disp, data = dataSet)
+
+## 按carb区分 按颜色
+qplot(mpg, disp, data = dataSet, color = carb)
+
+### 按形状
+qplot(mpg, disp, data = dataSet, shape = carb)
+
+## 添加拟合直线
+qplot(mpg, disp, data = dataSet, geom = c("point", "smooth"), method = "lm")
+
+## 使用facets
+qplot(mpg, disp, data = dataSet, facets = . ~ carb)
+
+### 添加颜色和形状
+qplot(mpg, disp, data = dataSet, facets = . ~ carb, color = carb, shape = carb)
+
+
+位置调整与条形图
+library(ggplot2)
+with(mpg,table(class,year))
+p <- ggplot(data=mpg,aes(x=class,fill=factor(year)))
+p + geom_bar(position='dodge')#并立方式
+p + geom_bar(position='stack')#叠加方式
+p + geom_bar(position='fill')#相对比例
+p + geom_bar(position='identity',alpha=0.3)#重叠比较
+p + geom_bar(aes(fill='class2'))+facet_wrap(~year)#分面显示
+
+#图层控制与直方图
+p <- ggplot(mpg,aes(hwy))
+p + geom_histogram(position = 'identity', alpha=0.5, aes(y = ..density.., fill = factor(year))) + 
+stat_density(geom = 'line', position = 'identity', aes(colour = factor(year)))
+
+
+#直方图
+qplot(x, geom = "histogram", binwidth = 0.5, fill = ..count..)
+或者
+dataSet <- data.frame(x)
+h <- ggplot(data = dataSet, aes(x = x))
+h + geom_histogram(aes(fill = ..count..), binwidth = 0.5)
+
+## 添加核密度曲线
+h + geom_histogram(aes(y = ..density.., fill = ..count..), binwidth = 0.5) +
+    geom_density(color = "red")
+	
+## 添加正态密度曲线
+dataSet2 <- data.frame(xfit, yfit)
+h + geom_histogram(aes(fill = ..count..), binwidth = 0.5) + geom_line(data = dataSet2,
+    aes(x = xfit, y = yfit), color = "red")
+	
+	
+保存图片
+ggsave(file='D:/dd.jpg')
+
+=========================================================================
+
+
+require(ggplot2)
+data(diamonds)
+set.seed(42)
+small <- diamonds[sample(nrow(diamonds), 1000), ]
+head(small)
+
+summary(small)
+
+p <- ggplot(data = small, mapping = aes(x = carat, y = price))
+
+#直方图
+ggplot(small)+geom_histogram(aes(x=price))
+
+#柱状图
+ggplot(small)+geom_bar(aes(x=clarity))
+ggplot()+geom_bar(aes(x=c(LETTERS[1:3]),y=1:3), stat="identity")
+#密度函数图
+ggplot(small)+geom_density(aes(x=price, colour=cut))
+
+ggplot(small)+geom_bar(aes(x=cut, fill=cut))+coord_flip()
+
+#饼图
+ggplot(small)+geom_bar(aes(x=factor(1), fill=cut))+coord_polar(theta="y")
+#靶心图
+ggplot(small)+geom_bar(aes(x=factor(1), fill=cut))+coord_polar()
+#风玫瑰图(windrose)
+ggplot(small)+geom_bar(aes(x=clarity, fill=cut))+coord_polar()
+
+==========================================================================
+韦恩图
+library(VennDiagram)
+A = 1:150
+B = c(121:170,300:320)
+C = c(20:40,141:200)
+Length_A<-length(A)
+Length_B<-length(B)
+Length_C<-length(C)
+Length_AB<-length(intersect(A,B))
+Length_BC<-length(intersect(B,C))
+Length_AC<-length(intersect(A,C))
+Length_ABC<-length(intersect(intersect(A,B),C))
+
+T<-venn.diagram(list(A=A,B=B,C=C),filename=NULL
+,lwd=1,lty=2,col=c('red','green','blue')
+,fill=c('red','green','blue')
+,cat.col=c('red','green','blue')
+,reverse=TRUE)
+grid.draw(T)
+
+library(gplots)
+oneName <- function() paste(sample(LETTERS,5,replace=TRUE),collapse="")
+geneNames <- replicate(1000, oneName())
+GroupA <- sample(geneNames, 400, replace=FALSE)
+GroupB <- sample(geneNames, 750, replace=FALSE)
+GroupC <- sample(geneNames, 250, replace=FALSE)
+GroupD <- sample(geneNames, 300, replace=FALSE)
+input  <-list(GroupA,GroupB,GroupC,GroupD)
+venn(input)
+

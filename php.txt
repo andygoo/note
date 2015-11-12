@@ -1,0 +1,197 @@
+
+PHP安装
+
+yum -y install gd-devel libjpeg-devel libpng-devel freetype-devel libxml2-devel curl-devel freetype-devel libmcrypt libmcrypt-devel mcrypt mhash
+
+wget http://cl1.php.net/get/php-5.5.10.tar.gz/from/this/mirror
+
+./configure \
+--prefix=/usr/local/php \
+--with-config-file-path=/usr/local/php/etc \
+--enable-fpm \
+--with-fpm-user=www \
+--with-fpm-group=www \
+--with-mysql=mysqlnd \
+--with-mysqli=mysqlnd \
+--with-pdo-mysql=mysqlnd \
+--with-iconv-dir \
+--with-freetype-dir \
+--with-jpeg-dir \
+--with-png-dir \
+--with-zlib \
+--with-libxml-dir=/usr \
+--enable-xml \
+--disable-rpath \
+--enable-bcmath \
+--enable-shmop \
+--enable-sysvsem \
+--with-curl \
+--enable-mbregex \
+--enable-mbstring \
+--with-mcrypt \
+--enable-ftp \
+--with-gd \
+--enable-gd-native-ttf \
+--with-openssl \
+--with-mhash \
+--enable-pcntl \
+--enable-sockets \
+--with-xmlrpc \
+--enable-zip \
+--enable-soap \
+--without-pear \
+--with-gettext \
+--disable-fileinfo \
+--enable-opcache \
+
+
+make
+make install
+
+cp php.ini-production /usr/local/php/etc/php.ini
+cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
+vim /usr/local/php/etc/php-fpm.conf
+listen = /tmp/php-cgi.sock
+
+cp sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm
+chmod +x /etc/init.d/php-fpm
+
+chkconfig php-fpm on
+
+service php-fpm restart/start/stop
+
+#关闭php-fpm
+kill -INT `cat /usr/local/php/var/run/php-fpm.pid`
+#重启php-fpm
+kill -USR2 `cat /usr/local/php/var/run/php-fpm.pid`
+
+
+zend_extension=opcache.so //配置opcache
+opcache.memory_consumption=128 //共享内存大小, 这个根据你们的需求可调
+opcache.interned_strings_buffer=8 //interned string的内存大小, 也可调
+opcache.max_accelerated_files=4000 //最大缓存的文件数目
+opcache.revalidate_freq=60 //60s检查一次文件更新
+opcache.fast_shutdown=1 //打开快速关闭, 打开这个在PHP Request Shutdown的时候 会收内存的速度会提高
+opcache.enable_cli=1
+
+===========================================================================
+平滑升级
+wget http://jp1.php.net/distributions/php-5.4.17.tar.gz
+tar zxf php-5.4.17.tar.gz
+cp php-5.4.16/config.nice php-5.4.17
+cd php-5.4.17
+./config.nice
+make && make install
+
+===========================================================================
+netstat -napo |grep "php-fpm" | wc -l 
+查看一下当前fastcgi进程个数
+在4G内存的服务器上200就可以。
+
+2. 调高调高linux内核打开文件数量
+echo 'ulimit -HSn 65536' >> /etc/profile
+echo 'ulimit -HSn 65536' >> /etc/rc.local
+source /etc/profile
+
+3.脚本执行时间超时
+
+如果脚本因为某种原因长时间等待不返回 ，导致新来的请求不能得到处理，可以适当调小如下配置。
+nginx.conf里面主要是如下
+fastcgi_connect_timeout 300;
+fastcgi_send_timeout 300;
+fastcgi_read_timeout 300;
+
+php-fpm.conf里如要是如下
+request_terminate_timeout = 10s
+
+4.缓存设置比较小
+
+修改或增加配置到nginx.conf
+
+proxy_buffer_size 64k;
+proxy_buffers  512k;
+proxy_busy_buffers_size 128k;
+
+=====================================================================
+
+freetds mssql 安装
+wget http://mirrors.ibiblio.org/freetds/stable/freetds-stable.tgz
+./configure --enable-msdblib --prefix=/usr/local/freetds --with-tdsver=8.0
+make
+make install
+
+ln -s /usr/local/freetds/bin/tsql /usr/local/bin/tsql
+
+tsql -H 192.168.1.102 -p 1433 -U sa -P 111111
+tsql -S TEST -p 1433 -U sa -P 111111
+select * from test.dbo.test
+
+cd /data/lnmp0.9-full/php-5.3.21
+cd ext/pdo_dblib/
+/usr/local/php/bin/phpize
+./configure --with-php-config=/usr/local/php/bin/php-config --with-pdo-dblib=/usr/local/freetds
+make
+make install
+
+extension=pdo_dblib.so
+
+=========================================================================
+
+Mongo-php 扩展
+wget https://github.com/mongodb/mongo-php-driver/archive/master.zip
+mv master master.zip
+unzip master
+cd mongo-php-driver-master/
+/usr/local/php/bin/phpize
+./configure --with-php-config=/usr/local/php/bin/php-config
+make
+make install
+
+=========================================================================
+
+https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz
+./configure --prefix=/usr/local/libevent
+make
+mak install
+
+安装memcached
+wget http://www.memcached.org/files/memcached-1.4.20.tar.gz
+./configure --prefix=/usr/local/memcached --with-libevent=/usr/local/libevent
+make
+mak install
+
+启动memcached
+memcached -d -p 11211 -u root -l 192.168.1.244 -m 64 -c 1024 -t 8 -P /tmp/memcached.pid
+停止memcached
+kill `cat /tmp/memcached.pid` 
+
+chmod 755 /etc/init.d/memcached
+4.将memcached加入系统服务：
+chkconfig --add memcached
+chkconfig memcached on
+5.以服务方式运行memcached
+service memcached start
+
+
+安装Memcache 扩展
+wget http://pecl.php.net/get/memcache-3.0.8.tgz
+tar vxzf memcache-3.0.8.tgz
+cd memcache-3.0.8
+/usr/local/php/bin/phpize
+./configure --enable-memcache --with-php-config=/usr/local/php/bin/php-config --with-zlib-dir
+make
+make install
+
+$memcache = new Memcache;
+$memcache->addServer('localhost', 11213);
+$memcache->addServer('localhost', 11214);
+$memcache->addServer('localhost', 11215);
+$memStats = $memcache->getExtendedStats();
+print_r($memStats);
+=========================================================================
+
+修改php子进程
+vi  /usr/local/php/etc/php-fpm.conf
+pm.max_children = 64
+
+=====================================

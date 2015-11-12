@@ -1,0 +1,96 @@
+
+alias g="git"
+alias gb="git branch"
+alias gco="git checkout"
+alias gcmsg="git commit -m"
+alias gamend="git commit --amend -C HEAD"
+alias gst="git status"
+alias log="git log --oneline --graph --decorate --color=always"
+alias logg="git log --graph --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(bold white)—     %an%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative"
+
+alias 'gitpush'='git push origin develop'
+alias 'gm-master'='git checkout master;git pull origin master;git merge origin/develop --no-ff; git push origin master; git checkout develop'
+
+git config --list
+git config --global user.name [username]
+git config --global user.email [email]
+
+添加远端repo：
+$ git remote add upstream git://github.com/pjhyett/github-services.git
+重命名远端repo：
+$ git://github.com/pjhyett/github-services.git为“upstream”
+
+============================================================================
+
+分支策略：git上始终保持两个分支，master分支与develop分支。master分支主要用于发布时使用，而develop分支主要用于开发使用。
+
+创建master的分支develop
+git checkout -b develop master
+
+切换到master分支
+git checkout master
+
+合并develop分支到master
+git merge --no-ff develop
+
+
+除了以上两个常驻分支外，我们还可以适当分支出三种分支：功能分支、预发布分支、修补分支，这三种分支使用完后也该删除，保持两个常驻分支。
+
+功能分支：该分支从develop中分支出来，开发完成后再合并入develop，名字采用feature-* 的形式命名。
+创建功能分支：
+　　git checkout -b feature-x develop
+开发完成后，合并到develop分支：
+　　git checkout develop
+　　git merge --no-ff feature-x
+最后删除分支:
+　　git branch -d feature-x
+
+
+预发布分支：正是版本发布前，既合并到master分支前，因此预发布分支是从develop分支出来的，预发布后，必修合并进develop和master。命名采用release-*的形式。
+创建一个预发布分支：
+　　git checkout -b release-* develop
+确认版本没有问题后，合并到master分支：
+　　git checkout master
+    git merge --no-ff release-*
+对合并生成的新节点，做一个标签：
+　　git tag -a 1.2
+再合并到develop分支:
+　　git checkout decelop
+　　git merge --no-ff release-*
+最后删除分支:
+　　git branch -d release-*
+
+
+修补分支：主要用于修改bug的分支，从master分支分出来，修补后，在合并进master和develop分支。命名采用fixbug-*形式。
+创建一个修补分支：
+　　git checkout -b fixbug-* master
+修补结束后,合并到master分支:
+　　git checkout master
+　　git merge --no-ff fixbug-*
+　　git tag -a 0.1.1
+再合并到develop分支:
+　　git checkout develop
+　　git merge --no-f fixbug-*
+最后删除分支:
+　　git branch -d fixbug-*
+
+====================================================================
+【本地代码库回滚】：
+git reset --hard commit-id :回滚到commit-id，讲commit-id之后提交的commit都去除
+git reset --hard HEAD~3：将最近3次的提交回滚
+
+【远程代码库回滚】：
+这个是重点要说的内容，过程比本地回滚要复杂
+应用场景：自动部署系统发布后发现问题，需要回滚到某一个commit，再重新发布
+原理：先将本地分支退回到某个commit，删除远程分支，再重新push本地分支
+
+操作步骤：
+1、git checkout the_branch
+2、git pull
+3、git branch the_branch_backup //备份一下这个分支当前的情况
+4、git reset --hard the_commit_id //把the_branch本地回滚到the_commit_id
+5、git push origin :the_branch //删除远程 the_branch
+6、git push origin the_branch //用回滚后的本地分支重新建立远程分支
+7、git push origin :the_branch_backup //如果前面都成功了，删除这个备份分支
+
+

@@ -1,0 +1,91 @@
+﻿
+export MAHOUT_LOCAL=true
+
+wget http://archive.apache.org/dist/mahout/0.8/mahout-distribution-0.8.tar.gz
+tar -zxvf mahout-distribution-0.8.tar.gz
+
+vim /etc/profile
+export MAHOUT_HOME=/home/hadoop/mahout-distribution-0.8
+export PIG_HOME=/home/hadoop/pig-0.9.2
+export HBASE_HOME=/home/hadoop/hbase-0.94.3
+export HIVE_HOME=/home/hadoop/hive-0.9.0
+export HADOOP_HOME=/home/hadoop/hadoop-1.1.1
+export JAVA_HOME=/home/hadoop/jdk1.7.0
+export PATH=$JAVA_HOME/bin:$PIG_HOME/bin:$MAHOUT_HOME/bin:$HBASE_HOME/bin:$HIVE_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/conf:$PATH
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$HBASE_HOME/lib:$MAHOUT_HOME/lib:$PIG_HOME/lib:$HIVE_HOME/lib:$JAVA_HOME/lib/tools.jar
+
+测试
+hadoop fs -mkdir testdata
+hadoop fs -put /home/hadoop/mahout-distribution-0.7/synthetic_control.data testdata
+
+使用kmeans算法测试
+hadoop jar /home/hadoop/mahout-distribution-0.7/mahout-examples-0.7-job.jar org.apache.mahout.clustering.syntheticcontrol.kmeans.Job
+
+查看结果
+hadoop fs -lsr output
+
+========================================================================================================================================
+
+运行mahout的朴素贝叶斯分类器
+
+下载数据集，并解压
+wget http://people.csail.mit.edu/jrennie/20Newsgroups/20news-bydate.tar.gz
+tar -xf 20news-bydate.tar.gz
+#上传到hdfs
+hadoop fs -put 20news-bydate-test .
+hadoop fs -put 20news-bydate-train .
+
+转换格式
+#转换为序列文件(sequence files)
+mahout seqdirectory -i 20news-bydate-train -o 20news-bydate-train-seq
+mahout seqdirectory -i 20news-bydate-test  -o 20news-bydate-test-seq
+
+#转换为tf-idf向量
+mahout seq2sparse -i 20news-bydate-train-seq -o 20news-bydate-train-vector -lnorm -nv -wt tfidf
+mahout seq2sparse -i 20news-bydate-test-seq  -o 20news-bydate-test-vector -lnorm -nv -wt tfidf
+ -a org.apache.lucene.analysis.core.WhitespaceAnalyzer
+
+训练朴素贝叶斯模型
+mahout trainnb -i 20news-bydate-train-vectors/tfidf-vectors -el -o model -li labelindex -ow
+
+测试朴素贝叶斯模型
+mahout testnb -i  20news-bydate-train-vectors/tfidf-vectors -m model -l labelindex -ow -o test-result
+
+查看训练后的结构
+mahout seqdumper -i labelindex 
+
+Input Path: labelindex
+Key class: class org.apache.hadoop.io.Text Value Class: class org.apache.hadoop.io.IntWritable
+Key: alt.atheism: Value: 0
+Key: comp.graphics: Value: 1
+Key: comp.os.ms-windows.misc: Value: 2
+Key: comp.sys.ibm.pc.hardware: Value: 3
+Key: comp.sys.mac.hardware: Value: 4
+Key: comp.windows.x: Value: 5
+Key: misc.forsale: Value: 6
+Key: rec.autos: Value: 7
+Key: rec.motorcycles: Value: 8
+Key: rec.sport.baseball: Value: 9
+Key: rec.sport.hockey: Value: 10
+Key: sci.crypt: Value: 11
+Key: sci.electronics: Value: 12
+Key: sci.med: Value: 13
+Key: sci.space: Value: 14
+Key: soc.religion.christian: Value: 15
+Key: talk.politics.guns: Value: 16
+Key: talk.politics.mideast: Value: 17
+Key: talk.politics.misc: Value: 18
+Key: talk.religion.misc: Value: 19
+Count: 20
+
+查看结果，将序列文件转化为文本
+bin/mahout seqdumper -i 20news-testing/part-m-00000 -o 20news_testing.res
+cat 20news_testging.res
+
+
+bin/mahout seqdumper -i /tmp/mahout-work-hadoop/sex-test-vectors -o /tmp/sex-test-vectors
+
+
+./mahout seqdumper -s user/hadoop/output/cluster-9/part-r-00000 -o /home/hadoop/out/part-0
+
+其中n为某类的样本数目，c为各类各属性的中心，r为各类属性的半径，

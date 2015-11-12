@@ -1,0 +1,384 @@
+
+
+wget http://mirrors.sohu.com/fedora-epel/6/i386/epel-release-6-8.noarch.rpm
+wget http://mirrors.ustc.edu.cn/fedora/epel/6/i386/epel-release-6-8.noarch.rpm
+
+wget http://mirrors.sohu.com/fedora-epel/6/x86_64/epel-release-6-8.noarch.rpm
+wget http://mirrors.ustc.edu.cn/fedora/epel/6/x86_64/epel-release-6-8.noarch.rpm
+
+rpm -Uvh epel-release-6-7-noarch.rpm
+
+rpm -ivh  http://mirrors.sohu.com/fedora-epel/6/i386/epel-release-6-8.noarch.rpm
+yum repolist
+
+========================================================
+VIM 配置
+wget amix.dk/vim/vimrc.txt
+mv vimrc.txt .vimrc
+
+vi /root/.bashrc
+alias vi='vim'
+
+===========================================================================
+
+使用ssh-keygen设置ssh无密码登录
+
+ls ~/.ssh/
+ssh-keygen -t rsa
+cat ~/.ssh/id_rsa.pub | ssh root@122.112.4.133 "cat - >> ~/.ssh/authorized_keys"
+
+Address 192.168.0.203 maps to localhost, but this does not map back to the address - POSSIBLE BREAK-IN ATTEMPT!
+root@192.168.0.203's password: 
+Last login: Thu Feb 21 03:01:49 2013 from desktop100.example.com
+
+解决方法：修改本机ssh_config文件
+vim /etc/ssh/ssh_config
+GSSAPIAuthentication no
+
+========================================================================
+
+scp -r /data/wwwroot/ 122.112.4.133:/data/
+scp -r /usr/local/nginx/conf/vhost 122.112.4.133:/usr/local/nginx/conf/
+scp /usr/local/freetds/etc/freetds.conf 122.112.4.133:/usr/local/freetds/etc/freetds.conf
+
+=====================================================================
+
+SVN 命令
+mkdir -p /data/svndata/wapsite
+svnadmin create /data/svndata/wapsite
+svn import wapsite file:///data/svndata/wapsite -m 'sss'
+svn co svn://122.112.4.134/wapsite wapsite
+svnserve -d -r /data/svndata/
+killall svnserve 
+
+find . -type d -name ".svn"|xargs rm -rf
+
+=========================================================================
+
+配置单网卡双IP
+vi /etc/sysconfig/network-scripts/ifcfg-eth0:0
+ 
+DEVICE=eth0:0
+BOOTPROTO=static
+IPADDR=192.168.1.245
+NETMASK=255.255.255.0
+#GETWAY=192.168.1.1
+ONBOOT=yes
+
+service network restart
+========================================================================
+Linux设置固定IP地址
+① vi /etc/sysconfig/network
+NETWORKING=yes 
+NETWORKING_IPV6=no 
+GATEWAY=192.168.1.1 
+HOSTNAME=Cluster1 
+② vi /etc/sysconfig/network-scripts/ifcfg-eth0
+DEVICE=eth0 
+#BOOTPROTO=dhcp 
+BOOTPROTO=static 
+IPADDR=192.168.1.201 
+NETMASK=255.255.255.0 
+HWADDR=00:0c:29:28:75:59 
+ONBOOT=yes 
+DHCP_HOSTNAME=centOS 
+TYPE=Ethernet 
+USERCTL=no 
+IPV6INIT=no 
+PEERDNS=yes 
+③ 指定DNS服务器：vi /etc/resolv.conf
+nameserver 8.8.8.8
+===================================================
+DEVICE=eth0
+HWADDR=08:00:27:51:58:0B
+TYPE=Ethernet
+UUID=0bd5d6d3-1699-445f-b935-569511df59ed
+ONBOOT=yes
+NM_CONTROLLED=no
+BOOTPROTO=static
+IPADDR=192.168.1.199
+NETMASK=255.255.255.0
+GATEWAY=192.168.1.1
+===================================================
+把整个目录打包（没有压缩）	
+tar cvf <outfile>.tar <dir>
+
+du -sh * | sort -h
+
+du -sh /*
+找出某个目录下（这里是 /home/vpsee）大小超过 500MB 的文件（打印前40行并按照 MB 从小到大排列）
+find /home/vpsee -printf "%k %p\n" | sort -g -k 1,1 | awk '{if($1 > 500000) print $1/1024 "MB" " " $2 }' | tail -n 40
+
+=====================================================
+
+cat /etc/issue 操作系统版本
+cat /proc/cpuinfo 查看cpu信息
+cat /proc/meminfo 机器的内存使用信息
+free 查看机器可用内存
+uname -a 系统版本
+cat /etc/passwd 查看所有用户的列表
+cat /etc/group 查看用户组
+df -h 查看硬盘大小
+
+查看物理CPU个数 
+cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l
+
+查看逻辑CPU个数
+cat /proc/cpuinfo | grep "processor" | wc -l
+
+查看CPU是几核的
+cat /proc/cpuinfo | grep "cores" | uniq
+
+查看CPU的主频
+cat /proc/cpuinfo | grep MHz | uniq
+
+查看CPU型号信息
+cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c
+
+=========================================================================
+
+mkdir –p /mnt/nfs
+mount -t nfs -o rw 10.10.178.22:/root/data /mnt/nfs
+
+netstat -an 查看网络端口
+lsof -i :port 查看指定端口运行的程序，同时还有当前连接。
+
+============================================================================
+
+分析日志中那些IP访问最多
+cat access_20130704.log | awk '{print $1}' | sort | uniq -c | sort -nr | head -20
+
+分析日志中那些Url请求访问次数最多
+cat access_20130704.log | awk -F """ '{print $(NF-5)}' | sort | uniq -c | sort -nr | head -20
+
+cat  /data/mowhere/201406/24guangdong.txt | awk -F "|" '{print $1}' | sort | uniq -c | sort -nr |  head -20
+
+ls xxx | cat > mo.txt
+head -n 200000 mo.txt | xargs -I {} cat xxx/{} > gd20w.txt
+
+============================================================
+
+简单的一些防CC的办法
+
+if ($http_referer ~* mi5.gov ) {
+    rewrite ^(.*)$ http://www.baidu.com/ permanent;
+}
+if ($http_user_agent ~* firefox4.0 ) {
+    rewrite ^(.*)$ http://www.baidu.com/ permanent;
+}
+根据特征码，直接查找.log文件，并iptables封死相应IP
+cat com.log | grep 'Mozilla/5.0' | awk '{print "iptables -I INPUT -p tcp --dport 80 -s ", $1, "-j DROP"}'| sort -n | uniq | sh
+
+=====================================================
+
+cat a b | sort | uniq > c   # c is a union b 并集
+cat a b | sort | uniq -d > c   # c is a intersect b 交集
+cat a b b | sort | uniq -u > c   # c is set difference a - b 差集
+
+
+求第三列的数字之和： awk '{ x += $3 } END { print x }'
+
+===============================================================
+
+
+1、建用户：
+adduser phpq                             //新建phpq用户
+passwd phpq                               //给phpq用户设置密码
+
+2、建工作组
+groupadd test                          //新建test工作组
+
+3、新建用户同时增加工作组
+useradd -g test phpq                      //新建phpq用户并增加到test工作组
+
+4、给已有的用户增加工作组
+usermod -G groupname username
+
+6、永久性删除用户账号
+userdel peter
+groupdel peter
+usermod –G peter peter   （强制删除该用户的主目录和主目录下的所有文件和子目录）
+
+8、显示用户信息
+id user
+cat /etc/passwd
+
+passwd cnzhx
+
+
+grep developers /etc/group
+
+
+=========================================================================
+
+yum install popt-devel
+
+./configure --prefix=/usr/local/keepalived
+make && make install
+
+cp /usr/local/keepalived/etc/rc.d/init.d/keepalived /etc/init.d/
+cp /usr/local/keepalived/etc/sysconfig/keepalived /etc/sysconfig/
+
+mkdir /etc/keepalived
+cp /usr/local/keepalived/etc/keepalived/keepalived.conf /etc/keepalived/
+
+chmod +x /etc/init.d/keepalived
+chkconfig --add keepalived
+chkconfig keepalived on
+
+ln -s /usr/local/keepalived/sbin/keepalived /usr/sbin/
+service keepalived start
+
+验证：
+先后在主、从服务器上启动keepalived: service keepalived start
+在主服务器上查看是否已经绑定了虚拟IP： ip addr
+停止主服务器上的keepalived: service keepalived stop 然后在从服务器上查看是否已经绑定了虚拟IP：
+启动主服务器上的keepalived，看看主服务器能否重新接管虚拟IP
+
+! Configuration File for keepalived
+
+global_defs {
+    notification_email {
+        ss@qq.com
+    }
+
+    notification_email_from wanghaikuo@qq.com
+    smtp_server smtp.qq.com
+    smtp_connect_timeout 30
+    router_id nginx_master
+}
+
+vrrp_script Monitor_Nginx {
+    script "/root/nginx_pid.sh"
+    interval 2
+    weight 2
+}
+
+vrrp_instance VI_1 {
+    state BACKUP
+    interface eth0
+    virtual_router_id 51
+    priority 100
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1234
+    }
+    track_script {
+        Monitor_Nginx
+    }
+    virtual_ipaddress {
+        192.168.1.245
+    }
+}
+====================================================================
+
+JDK 安装
+
+http://www.oracle.com/technetwork/java/javase/downloads/index.html
+tar xzvf jdk-7u25-linux-x64.tar.gz -C /usr/java/
+
+export JAVA_HOME=/usr/java/jdk1.7.0_25
+export JRE_HOME=$JAVA_HOME/jre
+export CLASSPATH=.:$JRE_HOME/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+export PATH=$PATH:$JAVA_HOME/bin
+
+JDK 卸载
+rpm -qa | grep java
+yum -y remove java-1.4.2-gcj-compat
+
+rpm使用
+rpm -ivh file.rpm
+rpm -Uvh file.rpm
+rpm -e 软件包名
+
+=========================
+JAVA_HOME=C:\Program Files\Java\jdk1.7.0_09
+
+=======================================================================
+
+在linux 下，删除文件file中的第1到第N行： 
+sed -i '1,N d' file
+
+在每一行最前面加点东西：
+sed 's/^/#/g' pets.txt
+
+在每一行最后面加点东西：
+sed 's/$/ --- /g' pets.txt
+
+从一个文件删除所有空行：
+sed '/^$/ d' employee.txt
+ 
+删除所有注释行（假设注释以#开头）：
+sed '/^#/ d' employee.txt
+
+sed -i 's/".*"//' xx/xbc
+
+
+===================================================================
+
+alias gst-php="git status | awk -F 'modified:' '{print \$2}' | xargs -I '{}' php -l '{}'"
+
+1、求和
+cat /tmp/pc_vehicle_list_20151008.log | awk '{sum+=$1} END {print sum}'
+ 
+2、求平均
+cat /tmp/pc_vehicle_list_20151008.log | awk -F '\t' '{sum+=$2} END {print sum/NR}'
+cat /tmp/pc_vehicle_opcache_20151029.log | awk -F '\t' '{sum+=$2} END {print sum/NR}'
+ 
+3、求最大值
+cat /tmp/pc_vehicle_list_20151008.log | awk 'BEGIN {max = 0} {if ($2>max) max=$2 fi} END {print max}'
+ 
+4、求最小值（min的初始值设置一个超大数即可）
+cat /tmp/pc_vehicle_list_20151008.log | awk 'BEGIN {min = 1999999} {if ($1<min) min=$1 fi} END {print min}'
+
+
+cat  /tmp/pc_vehicle_list_20151008.log | awk -F '\t' '{if ($2>0.6) {print $2} fi}'
+
+=========================================================================================================
+
+系统
+# uname -a               # 查看内核/操作系统/CPU信息
+# head -n 1 /etc/issue   # 查看操作系统版本
+# cat /proc/cpuinfo      # 查看CPU信息
+# hostname               # 查看计算机名
+# lspci -tv              # 列出所有PCI设备
+# lsusb -tv              # 列出所有USB设备
+# lsmod                  # 列出加载的内核模块
+# env                    # 查看环境变量
+资源
+# free -m                # 查看内存使用量和交换区使用量
+# df -h                  # 查看各分区使用情况
+# du -sh <目录名>        # 查看指定目录的大小
+# grep MemTotal /proc/meminfo   # 查看内存总量
+# grep MemFree /proc/meminfo    # 查看空闲内存量
+# uptime                 # 查看系统运行时间、用户数、负载
+# cat /proc/loadavg      # 查看系统负载
+磁盘和分区
+# mount | column -t      # 查看挂接的分区状态
+# fdisk -l               # 查看所有分区
+# swapon -s              # 查看所有交换分区
+# hdparm -i /dev/hda     # 查看磁盘参数(仅适用于IDE设备)
+# dmesg | grep IDE       # 查看启动时IDE设备检测状况
+网络
+# ifconfig               # 查看所有网络接口的属性
+# iptables -L            # 查看防火墙设置
+# route -n               # 查看路由表
+# netstat -lntp          # 查看所有监听端口
+# netstat -antp          # 查看所有已经建立的连接
+# netstat -s             # 查看网络统计信息
+进程
+# ps -ef                 # 查看所有进程
+# top                    # 实时显示进程状态
+用户
+# w                      # 查看活动用户
+# id <用户名>            # 查看指定用户信息
+# last                   # 查看用户登录日志
+# cut -d: -f1 /etc/passwd   # 查看系统所有用户
+# cut -d: -f1 /etc/group    # 查看系统所有组
+# crontab -l             # 查看当前用户的计划任务
+服务
+# chkconfig --list       # 列出所有系统服务
+# chkconfig --list | grep on    # 列出所有启动的系统服务
+程序
+# rpm -qa                # 查看所有安装的软件包

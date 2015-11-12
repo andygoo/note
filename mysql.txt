@@ -1,0 +1,203 @@
+
+
+测试环境
+外 182.92.242.166
+内 10.173.26.93
+
+
+正式环境
+外 112.126.67.60
+内 10.163.11.77
+
+
+主 112.126.67.60
+从 10.165.123.240
+
+=====================================================================
+
+1、主从服务器分别作以下操作：
+版本一致
+初始化表，并在后台启动mysql
+修改root的密码
+  
+2、修改主服务器master:
+vi /etc/my.cnf
+[mysqld]
+log-bin=mysql-bin   //[必须]启用二进制日志
+server-id=222       //[必须]服务器唯一ID
+
+3、修改从服务器slave:
+vi /etc/my.cnf
+[mysqld]
+log-bin=mysql-bin   //[必须]启用二进制日志
+server-id=226       //[必须]服务器唯一ID
+
+4、重启两台服务器的mysql
+/etc/init.d/mysql restart
+
+5、在主服务器上建立帐户并授权slave:
+mysql -uroot -pmttang
+mysql>GRANT REPLICATION SLAVE ON *.* to 'mysync'@'%' identified by 'q123456';
+
+6、登录主服务器的mysql，查询master的状态
+mysql>show master status;
+
+7、配置从服务器Slave：
+mysql>change master to master_host='192.168.145.222',master_user='tb',master_password='q123456',master_log_file='mysql-bin.000004',master_log_pos=308;   //注意不要断开，“308”无单引号。
+Mysql>start slave;    //启动从服务器复制功能
+
+8、检查从服务器复制功能状态：
+mysql>show slave status\G
+Slave_IO_Running: Yes       //此状态必须YES
+Slave_SQL_Running: Yes      //此状态必须YES
+=================================================================
+mysql>flush tables with read lock; #锁掉master服务器的所有表
+mysql>show master status;
+mysql>AdidasFootball.sql  #在命令行中导出DB的数据
+mysql>unlock tables;
+
+mysql>AdidasFootball.sql  #在slave的命令行中导入DB的数据
+mysql>change master to master_host='192.168.145.222',master_user='tb',master_password='q123456',master_log_file='mysql-bin.000004',master_log_pos=308;   //注意不要断开，“308”无单引号。
+Mysql>start slave;    //启动从服务器复制功能
+=================================================================
+多主自增长ID重复
+
+A：my.cnf上加入参数  
+ 
+auto_increment_offset = 1   
+auto_increment_increment = 2   
+这样A的auto_increment字段产生的数值是：1, 3, 5, 7, …等奇数ID了  
+ 
+B：my.cnf上加入参数  
+ 
+auto_increment_offset = 2   
+auto_increment_increment = 2
+这样B的auto_increment字段产生的数值是：2, 4, 6, 8, …等偶数ID了  
+
+=====================================================================
+MySQL安装
+wget http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-5.6.17-linux-glibc2.5-i686.tar.gz
+
+groupadd mysql
+useradd mysql -g mysql
+
+rpm -qa | grep mysql
+rpm -e mysql　　// 普通删除模式
+rpm -e --nodeps mysql　　// 强力删除模式，如果使用上面命令删除时，提示有依赖的其它文件，则用该命令可以对其进行强力删除
+yum list | grep mysql
+yum install -y mysql-server mysql mysql-devel
+rpm -qi mysql-server
+
+mysqladmin -u root password 'new-password'  设置密码
+
+service mysqld start  启动
+chkconfig mysqld on   开机启动
+
+netstat -anp  查看端口是否有3306
+
+====================================================================
+
+数据库远程连接
+update user set host='%' where user='root';
+flush privileges;
+
+====================================================================
+
+修改数据库目录
+/etc/init.d/mysql stop
+cp -R /usr/local/mysql/var/* /data/mysql/
+chown mysql:mysql -R /data/mysql/
+vi /etc/my.cnf
+查找[mysqld] ，在下面加入datadir = /data/mysql/ 保存
+/etc/init.d/mysql start
+
+=====================================================================
+
+重置MySQL密码
+/etc/init.d/mysql stop
+mysqld_safe --skip-grant-tables &
+mysql
+UPDATE mysql.user SET Password=PASSWORD('root') WHERE User='root';
+FLUSH PRIVILEGES;
+/etc/init.d/mysql restart
+=======================================================================
+Mysql 导出csv文件
+select * from table into outfile '/tmp/t.csv' fields terminated by ','  lines terminated by '\n';
+
+Mysql 导出表结构
+mysqldump -uroot -proot database table --no-data > D:/table.sql
+--default-character-set latin1
+转换编码
+iconv -t utf-8 -f gbk -c /tmp/old.sql > /tmp/new.sql
+
+备份数据库
+mysqldump -uroot -proot database > /tmp/mobileadmin.sql
+--skip-lock-tables
+
+还原数据库
+标准命令：mysql -uroot -proot database < database.sql
+--default-character-set=utf8
+=====================================================================
+
+window mysql服务安装
+mysqld -install MySQL
+net start mysql
+
+===========================================
+
+SQLSERVER 时间类型转化
+convert(varchar,AccessDateTime,120) like '%2013-09-06%';
+
+show variables like '%datadir%';
+
+
+group_concat(name separator ';')
+====================================
+
+
+ps aux |grep mysq*
+
+
+
+[client]
+default-character-set = utf8
+
+[mysqld]
+character-set-server = utf8
+
+SHOW VARIABLES LIKE '%storage_engine%';
+
+修改表的字符集
+ALTER TABLE 'db'.'tb' CHARACTER SET utf8;
+
+查看当前用户的权限：
+mysql> show grants;
+
+查看某个用户的权限：
+mysql> show grants for 'jack'@'%';
+
+分配权限
+GRANT ALL PRIVILEGES ON 'database'.'table' TO mwdba@'%' IDENTIFIED BY 'password';
+FLUSH PRIVILEGES;
+
+GRANT RELOAD ON *.* TO mwdba@%;
+
+解除权限
+REVOKE ALL PRIVILEGES ON 'database'.'table' FROM 'user_name'@'host';
+FLUSH PRIVILEGES;
+5、删除用户
+
+复制代码
+mysql> select host,user,password from user;
+mysql> drop user 'jack'@'localhost';
+
+6、对账户重命名
+mysql> rename user 'jack'@'%' to 'jim'@'%';
+
+1、用set password命令
+mysql> SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123456');
+
+用mysqladmin
+  [root@rhel5 ~]# mysqladmin -uroot -p123456 password 1234abcd
+  
+  
