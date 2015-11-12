@@ -20,7 +20,7 @@ hadoop fs -put /home/hadoop/mahout-distribution-0.7/synthetic_control.data testd
 
 使用kmeans算法测试
 hadoop jar /home/hadoop/mahout-distribution-0.7/mahout-examples-0.7-job.jar org.apache.mahout.clustering.syntheticcontrol.kmeans.Job
-
+ 
 查看结果
 hadoop fs -lsr output
 
