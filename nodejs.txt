@@ -2,16 +2,9 @@
 
 wget http://nodejs.org/dist/v0.12.4/node-v0.12.4.tar.gz
 
-mkdir ~/local
-./configure ¨Cprefix=$HOME/local/node
+./configure ¨Cprefix=/usr/local/node
 make
 make install
-echo 'export PATH=$HOME/local/node/bin:$PATH' >> ~/.profile
-echo 'export NODE_PATH=$HOME/local/node:$HOME/local/node/lib/node_modules' >> ~/.profile
-source ~/.profile
-
-export PATH="/usr/local/node/bin:$PATH"
-export NODE_PATH="/usr/local/node:/usr/local/node/lib/node_modules"
 
 export NODE_HOME=/usr/local/node
 export PATH=$PATH:$NODE_HOME/bin
@@ -30,7 +23,7 @@ npm install nodejs-websocket
 npm install -g wsg
 wscat -c ws://echo.websocket.org
 
-wscat -c ws://192.168.1.244:8001 -p 8
+wscat -c ws://192.168.1.106:8001 -p 8
 
 
 

@@ -294,7 +294,11 @@ rpm -e 软件包名
 
 =========================
 JAVA_HOME=C:\Program Files\Java\jdk1.7.0_09
-
+#Path ：%JAVA_HOME%\bin;
+#CLASSPATH ：.;%JAVA_HOME%\lib;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar;//JDK1.5以后不用配置了
+不要被旧书误导了，jdk6以后的版本都不用再配CLASSPATH，而且也不建议去配。
+理论上java安装完一个变量都不需要配置，只不过为了命令行敲起来方便，所以通常会把jdk/bin目录下加入到path变量中。JAVA_HOME这个变量的作用是一些基于java开发的工具会用到，比如tomcat,groovy,vertx.....，如果不用这个工具这个变量也可以免了。
+不过通常为了方便以后用java开发的小工具，一般都会设置JAVA_HOME，然后把$JAVA_HOME/bin追加到PATH中
 =======================================================================
 
 在linux 下，删除文件file中的第1到第N行： 
