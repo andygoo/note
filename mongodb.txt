@@ -33,31 +33,6 @@ db.app_history.ensureIndex({'udid':1, 'vid':1}, {background:true});
 db.app_history.ensureIndex({udid:1, t:-1}, {background:true})
 db.app_history.ensureIndex({t:-1}, {background:true})
 
-db.app_history2.ensureIndex({udid:1, vid:1})
-db.app_history2.ensureIndex({udid:1, t:-1})
-
-
-db.app_history3.ensureIndex({udid:1, vid:1})
-db.app_history3.ensureIndex({udid:1, t:-1})
-
-db.app_history4.ensureIndex({udid:1, vid:1})
-db.app_history4.ensureIndex({udid:1, t:-1})
-
-db.app_history5.ensureIndex({udid:1, vid:1})
-db.app_history5.ensureIndex({udid:1, t:-1})
-
-db.app_history6.ensureIndex({udid:1, vid:1})
-db.app_history6.ensureIndex({udid:1, t:-1})
-
-db.app_history7.ensureIndex({udid:1, vid:1})
-db.app_history7.ensureIndex({udid:1, t:-1})
-
-db.app_history8.ensureIndex({udid:1, vid:1})
-db.app_history8.ensureIndex({udid:1, t:-1})
-
-db.app_history9.ensureIndex({udid:1, vid:1})
-db.app_history9.ensureIndex({udid:1, t:-1})
-
 db.tb.ensureIndex({"properties.user":1,"properties.email":1})
 db.app_history.dropIndex({'t':-1})
 db.app_history.dropIndex({'udid':1, 't':-1})
