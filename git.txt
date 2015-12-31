@@ -93,4 +93,16 @@ git reset --hard HEAD~3：将最近3次的提交回滚
 6、git push origin the_branch //用回滚后的本地分支重新建立远程分支
 7、git push origin :the_branch_backup //如果前面都成功了，删除这个备份分支
 
+=============================================================================
+git diff 配置
+vi .gitconfig
+[diff]
+external = /home/xieshiwei/git_vimdiff.sh
+[pager]
+diff =
 
+vi git_vimdiff.sh
+#!/bin/sh
+
+vim -d "$5" "$2"
+=======================================================================

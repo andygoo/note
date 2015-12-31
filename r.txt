@@ -31,7 +31,7 @@ wget http://pkgs.fedoraproject.org/lookaside/extras/R/R-3.0.2.tar.gz/f9a8374736e
 yum install gcc-gfortran   //configure: error: No F77 compiler found
 yum install gcc gcc-c++
 yum install readline-devel  //configure: error: --with-readline=yes (default) and headers/libs are not available
-yum install libXt-devel     //configure: error: --with-x=yes (default) and X11 headers/libs are not available
+yum install libXt-devel   || ssudo apt-get install libxt-dev  //configure: error: --with-x=yes (default) and X11 headers/libs are not available
 ./configure --prefix=/usr/local/R --with-readline=yes --disable-nls --enable-R-shlib --with-libpng --with-jpeglib --with-libtiff --with-x --with-cairo
 #后面两个选项--disable-nls --enable-R-shlib是为RHive的安装座准备，如果不安装RHive可以省去
 ./configure --prefix=/usr/local/R --enable-R-shlib --with-system-xz=no
@@ -140,7 +140,7 @@ write.table(data, file='/root/tm.txt', quote=F, sep="\t", row.names=F, col.names
 
 #提取域名
 urls <- paste(urls, '/', sep="")
-domains <- sub(pattern=".*://(.+?)[/|?].*", replacement="\\1", urls)
+domains <- sub(pattern="https?://(.+?)[/|?].*", replacement="\\1", urls)
 
 #读取文件夹所有文件
 all.files <- list.files(path="rdata",full.names=T,pattern=".txt")

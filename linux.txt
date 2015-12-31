@@ -407,3 +407,8 @@ apitude purge pattern //同上
 自动移除软件包
 apt-get autoremove //删除不再需要的软件包
 
+============================================================================================================
+统计一下请求头都有多长
+ngrep -W byline 'GET /' 'tcp and dst port 80' | awk -v RS="#+" -v FS="\n" '{ print length() }'
+查询一下大于 1K 的请求头
+ngrep -W byline 'GET /' 'tcp and dst port 80' | awk -v RS="#+" -v FS="\n" 'length() > 1000'
