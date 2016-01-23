@@ -148,3 +148,14 @@ function GetQueryString(name) {
    var r = window.location.search.substr(1).match(reg);
    if (r!=null) return (r[2]); return null;
 }
+
+var getAbsoluteUrl = (function() {  
+  var a;
+
+  return function(url) {
+    a = a || document.createElement('a');
+    a.href = url;
+
+    return a.href;
+  };
+})();
