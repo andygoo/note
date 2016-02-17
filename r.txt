@@ -285,4 +285,43 @@ datadistribution<-function(x,na.omit=F){
   return(c(n=n,mean=m,stdev=s,skew=skew,kurtosis=kurt))
 }
 
+========================多元线性回归=================================
 
+f <- read.csv('C:/Users/xwj/Desktop/c.txt')
+lmpv1<-lm(pv~uv+aa+bb,data=f)
+summary(lmpv1)
+
+Coefficients:中是最为关键的对c和b的相关估计。
+其中Estimate是与b,c值的估计，
+Std. Error 则是回归参数的标准差
+剩下的两个参数则是对回归参数的假设检验： 
+t value是对b,c进行假设检验的t值，
+以及P-值(用来与显著性水平比较决定是否接受该假设检验)Pr(>|t|)。
+最后我们还可以看到3个* 号，这表明x和y有非常显著的线性关系(*可以有0—3个，越多则线性关系越显著)。
+
+
+模型诊断
+
+在模型建立后会利用各种方式来检验模型的正确性，对残差进行分析是常见的方法
+下面生成四种用于模型诊断的图形。
+
+par(mfrow=c(2,2))
+plot(lmpv1)
+
+左上图是残差对拟合值作图，整体呈现出一种先下降后上升的模式，显示残差中可能还存在未提炼出来的影响因素。
+右上图残差QQ图，用以观察残差是否符合正态分布。
+左下图是标准化残差对拟合值，用于判断模型残差是否等方差。
+右下图是标准化残差对杠杆值，虚线表示的cooks距离等高线。
+
+
+模型预测
+
+ex<-read.csv('C:/Users/xwj/Desktop/t.txt')
+#predict(lmpv1, ex, interval="prediction", level=0.95)
+predict(lmpv1, ex)
+
+==========
+
+library(leaps)
+leaps<-regsubsets(pv~uv+cindex+hsindex,data=f,nbest=3)
+plot(leaps,scale="adjr2")
