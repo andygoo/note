@@ -2,7 +2,7 @@
 x1 <- matrix(rnorm(500, 1, 0.5), 100, 5)
 x2 <- matrix(rnorm(500, 2, 0.5), 100, 5)
 x <- rbind(x1, x2)
-clusters <- kmeans(x, 2)
+clusters <- kmeans(x, 4, nstart=500)
 clusters
 plot(x, col=clusters$cluster, pch=as.character(clusters$cluster), cex=0.5)
 points(clusters$centers, col='green', pch='o', cex = 2)
@@ -68,3 +68,53 @@ geom_bar(stat="identity") +
 coord_polar(theta="y")
 ggsave(file='D:/dd1.jpg')
 ===================================================================
+
+
+setwd('C:/Users/xwj/Desktop')
+data <- read.csv('ttt.csv', head=F, fileEncoding='UTF-8')
+summary(data$V2)
+clusters <- kmeans(data$V2, 4, nstart=20)
+
+label <- data.frame()
+ddd <- cbind(data, cluster=clusters$cluster)
+for(i in 1:4) {
+	min <- min(ddd[ddd$cluster==i,]['V2'])
+	max <- max(ddd[ddd$cluster==i,]['V2'])
+	cluster <- paste(min,'-',max,sep='')
+	label <- rbind(label, data.frame(cluster, min, max))
+}
+
+dd <- data.frame(label, mean=clusters$centers, size=clusters$size)
+dd <- dd[order(dd$mean), ]
+dd <- cbind(label=1:4, dd)
+dd
+dd$cluster <- paste(dd$label, ':', dd$cluster, sep="")
+library(ggplot2)
+ggplot(data=dd, aes(x=factor(1), y=size, fill=cluster)) + 
+geom_bar(stat="identity") + 
+coord_polar(theta="y")
+
+
+fitted(clusters, method = c("centers", "classes"))
+==================================================================
+
+baidu <- read.table('baidu.csv', head=F, sep="\t", fileEncoding='UTF-8')
+colnames(baidu) <- c('plat', 'city', 'keyword', 'show', 'click', 'fee', 'click_rate')
+head(baidu)
+nrow(baidu)
+
+bb <- baidu[c('show','click')]
+clusters <- kmeans(bb, 4, nstart=500)
+clusters$centers
+
+o <- as.data.frame(clusters$centers)
+o <- o[order(-o$show), ]
+m <- data.frame(type=row.names(o), leval=c('a','b','c','d'))
+
+cc <- cbind(baidu, type=clusters$cluster)
+cc <- merge(cc, m)
+cc <- cc[order(cc$plat, cc$city, cc$leval), ]
+head(cc)
+cc <- cc[c('plat','city','keyword','show','click','fee','click_rate','leval')]
+head(cc)
+write.table(cc, file='baidu_data3.csv', quote=F, sep=",", row.names=F, col.names=T)

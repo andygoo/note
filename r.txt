@@ -320,8 +320,30 @@ ex<-read.csv('C:/Users/xwj/Desktop/t.txt')
 #predict(lmpv1, ex, interval="prediction", level=0.95)
 predict(lmpv1, ex)
 
-==========
+===============================================================
 
+#检测二变量关系
+cor(f)
+
+
+#所有的预测变量解释了pv 60.8%的方差
+
+#选择最佳的回归模型
+全子集回归，即所有可能的模型都被评价了。
+
+#基于调整R平方，不同子集大小的三个最佳模型
 library(leaps)
-leaps<-regsubsets(pv~uv+cindex+hsindex,data=f,nbest=3)
+leaps<-regsubsets(pv~uv+aa+bb, data=f, nbest=3)
 plot(leaps,scale="adjr2")
+
+含uv、cindex、hsindex的模型调整R平方值为0.59最高，三预测变量模型是最佳模型。
+
+#基于Mallows Cp统计量，不同子集大小的三个最佳模型
+library(car)
+subsets(leaps,statistic="cp",main="cp plot for all subsets regression")
+abline(1,1,lty=2,col="red")#画截距项和斜率均为1的直线
+#越好的模型离截距项和斜率均为1的直线越近——即u-c-h三预测变量模型lm(pv~uv+cindex+hsindex,data=f)
+
+#绘制因变量与自变量的散点图矩阵
+library(car)
+scatterplotMatrix(f,spread=F,lty.smooth=2,main="scatter plot matrix")
