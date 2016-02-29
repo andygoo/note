@@ -108,6 +108,7 @@ clusters <- kmeans(bb, 4, nstart=500)
 clusters$centers
 
 o <- as.data.frame(clusters$centers)
+o <- cbind(type=row.names(o), o)
 o <- o[order(-o$show), ]
 m <- data.frame(type=row.names(o), leval=c('a','b','c','d'))
 
