@@ -158,6 +158,7 @@ cat  /data/mowhere/201406/24guangdong.txt | awk -F "|" '{print $1}' | sort | uni
 ls xxx | cat > mo.txt
 head -n 200000 mo.txt | xargs -I {} cat xxx/{} > gd20w.txt
 
+head access_20160406.log -n 50 | grep 'wpv.gif' | grep 'y=v' | awk '{print $6,$8}' | awk -F  "uid=" '{print $2}' | awk '{gsub(/&.*/, "", $1); print $0;}'
 ============================================================
 
 简单的一些防CC的办法
