@@ -90,4 +90,16 @@ SELECT COUNT(AGE) from users                        $db->users->find(array("age"
 UPDATE users SET a=1 WHERE b='q'                    $db->users->update(array("b" => "q"), array('$set' => array("a" => 1)));
 UPDATE users SET a=a+2 WHERE b='q'                  $db->users->update(array("b" => "q"), array('$inc' => array("a" => 2)));
 DELETE FROM users WHERE z="abc"                     $db->users->remove(array("z" => "abc"));
+
+$con = SimpleMongo::getInstance();
+$mongo  = $con->tongji;
+$keys = array("vid" => 1);
+$initial = array('pv'=>0,'uv'=>0);
+$reduce = "function (obj, out) { " .
+        "out.pv = out.pv+obj.pv;" .
+        "out.uv = out.uv+obj.uv;" .
+        "}";
+$condition = array('condition' => array("vid" => array( '$in' => $vids)));
+$ret = $mongo->vehicle_uv->group($keys, $initial, $reduce, $condition);
+var_dump($ret['retval'])
 =====================================
