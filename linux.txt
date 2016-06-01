@@ -415,3 +415,13 @@ apt-get autoremove //删除不再需要的软件包
 ngrep -W byline 'GET /' 'tcp and dst port 80' | awk -v RS="#+" -v FS="\n" '{ print length() }'
 查询一下大于 1K 的请求头
 ngrep -W byline 'GET /' 'tcp and dst port 80' | awk -v RS="#+" -v FS="\n" 'length() > 1000'
+
+cat access_20160331.log | grep '/vehicle_list/f_' | grep 'y=v' | head -n 100 | awk '{sub(/.*vehicle_list\/f_/, "", $8);  sub(/(\/.*)|(\.htm.*)/, "", $8); sub(/.*uid=/, "", $6);sub(/&.*/, "", $6); print$6,"\t",$8}'
+
+cat access_2016042* | grep '/ershouche/' | grep 'y=v' | awk '{sub(/.*ershouche\//, "", $8); sub(/(\/.*)|(\.htm.*)/, "", $8); sub(/.*uid=/, "", $6); sub(/&.*/, "", $6); print$6,"\t",$8}' >> /alidata1/logs/list4.txt
+
+
+
+
+
+
