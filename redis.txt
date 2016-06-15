@@ -58,3 +58,9 @@ appendfsync no????????? #从不同步。高效但是数据不会被持久化。
 1). 将现有已经坏损的AOF文件额外拷贝出来一份。
 2). 执行"redis-check-aof --fix <filename>"命令来修复坏损的AOF文件。
 3). 用修复后的AOF文件重新启动Redis服务器。
+
+=========================================================
+
+批量删除
+redis-cli keys "channel_phone*" | xargs redis-cli del
+
