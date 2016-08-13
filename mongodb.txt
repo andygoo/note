@@ -32,6 +32,7 @@ db.tb.ensureIndex({udid:1, vid:1}, {background:true, unique:true, dropDups:true}
 db.app_history.ensureIndex({'udid':1, 'vid':1}, {background:true});
 db.app_history.ensureIndex({udid:1, t:-1}, {background:true})
 db.app_history.ensureIndex({t:-1}, {background:true})
+db.app_history.ensureIndex({'vid':1});
 
 db.tb.ensureIndex({"properties.user":1,"properties.email":1})
 db.app_history.dropIndex({'t':-1})

@@ -185,6 +185,7 @@ GRANT RELOAD ON *.* TO mwdba@%;
 解除权限
 REVOKE ALL PRIVILEGES ON 'database'.'table' FROM 'user_name'@'host';
 FLUSH PRIVILEGES;
+
 5、删除用户
 
 复制代码
