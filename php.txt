@@ -195,3 +195,24 @@ vi  /usr/local/php/etc/php-fpm.conf
 pm.max_children = 64
 
 =====================================
+
+安装
+curl -sS https://getcomposer.org/installer | php
+mv composer.phar /usr/local/bin/composer
+
+国内镜像
+composer config -g repo.packagist composer https://packagist.phpcompose
+
+更新composer
+composer self-update
+
+安装依赖包
+composer require qiniu/php-sdk
+
+安装依赖优化
+composer install --optimize-autoloader --no-dev
+composer dump-autoload --optimize
+
+#windows
+https://getcomposer.org/Composer-Setup.exe
+echo @php "%~dp0composer.phar" %*>composer.bat
