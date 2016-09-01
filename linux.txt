@@ -411,17 +411,31 @@ apitude purge pattern //同上
 apt-get autoremove //删除不再需要的软件包
 
 ============================================================================================================
-统计一下请求头都有多长
-ngrep -W byline 'GET /' 'tcp and dst port 80' | awk -v RS="#+" -v FS="\n" '{ print length() }'
-查询一下大于 1K 的请求头
-ngrep -W byline 'GET /' 'tcp and dst port 80' | awk -v RS="#+" -v FS="\n" 'length() > 1000'
 
 cat access_20160331.log | grep '/vehicle_list/f_' | grep 'y=v' | head -n 100 | awk '{sub(/.*vehicle_list\/f_/, "", $8);  sub(/(\/.*)|(\.htm.*)/, "", $8); sub(/.*uid=/, "", $6);sub(/&.*/, "", $6); print$6,"\t",$8}'
 
 cat access_2016042* | grep '/ershouche/' | grep 'y=v' | awk '{sub(/.*ershouche\//, "", $8); sub(/(\/.*)|(\.htm.*)/, "", $8); sub(/.*uid=/, "", $6); sub(/&.*/, "", $6); print$6,"\t",$8}' >> /alidata1/logs/list4.txt
 
 
+统计一下请求头都有多长
+ngrep -W byline 'GET /' 'tcp and dst port 80' | awk -v RS="#+" -v FS="\n" '{ print length() }'
+
+查询一下大于 1K 的请求头
+ngrep -W byline 'GET /' 'tcp and dst port 80' | awk -v RS="#+" -v FS="\n" 'length() > 1000'
 
 
+// 平均每秒的请求数
+less main.log | awk '{sec=substr($4,2,20);reqs++;reqsBySec[sec]++;} END{print reqs/length(reqsBySec)}'
 
+// 峰值每秒请求数
+less main.log | awk '{sec=substr($4,2,20);requests[sec]++;} END{for(s in requests){printf("%s %s\n", requests[s],s)}}' | sort -nr | head
+
+// 带宽
+less main.log | awk '{url=$7; requests[url]++;bytes[url]+=$10} END{for(url in requests){printf("%sMB %sKB/req %s %s\n", bytes[url] / 1024 / 1024, bytes[url] /requests[url] / 1024, requests[url], url)}}' | sort -nr | head -n 15
+
+// 时间
+less main.log | awk '{url=$7; times[url]++} END{for(url in times){printf("%s %s\n", times[url], url)}}' | sort -nr | head
+
+// 爬虫
+egrep 'spider|bot' | awk '{name=$17;if(index($15,"spider")>0){name=$15};spiders[name]++} END{for(name in spiders){printf("%s %s\n",spiders[name], name)}}' | sort -nr
 
